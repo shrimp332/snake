@@ -89,7 +89,7 @@ const maxFood = 3
 const (
 	snakeHead = "O"
 	snakeBody = "o"
-	foodIcon  = "x"
+	foodIcon  = "\x1b[31mx\x1b[0m" // red x
 )
 
 var screenSize Position
@@ -203,6 +203,8 @@ func main() {
 func screenPrint(v ...any) {
 	fmt.Print("\x1b[s")
 	defer fmt.Print("\x1b[u")
+  fmt.Print("\x1b[40m")
+  defer fmt.Print("\x1b[49m")
 	moveCursorPos(Position{screenSize.x + 1, 0})
 	fmt.Print("\x1b[2K")
 	fmt.Print(v...)
