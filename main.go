@@ -129,6 +129,7 @@ func main() {
 		for {
 			counter++
 			if len(f.pos) < maxFood && counter%5 == 0 {
+        counter = 0
 				fmt.Print("\x1b[s")
 				foodx := rand.Intn(screenSize.x)
 				foody := rand.Intn(screenSize.y)
@@ -150,7 +151,7 @@ func main() {
 				s.Tail = s.Tail[:len(s.Tail)-1]
 			}
 
-      s.move()
+			s.move()
 
 			if s.isTail(s.Head) {
 				screenPrintTop("Game Over, Final Score: ", s.length)
@@ -164,7 +165,7 @@ func main() {
 				f.remove(s.Head)
 			}
 			screenPrint("Score: ", s.length)
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(300 * time.Millisecond)
 		}
 	}()
 
@@ -202,7 +203,7 @@ func main() {
 func screenPrint(v ...any) {
 	fmt.Print("\x1b[s")
 	defer fmt.Print("\x1b[u")
-	moveCursorPos(Position{screenSize.x, 0})
+	moveCursorPos(Position{screenSize.x + 1, 0})
 	fmt.Print("\x1b[2K")
 	fmt.Print(v...)
 }
@@ -253,7 +254,7 @@ func getTSize() Position {
 	fmt.Print("\x1b[s")
 	moveCursorPos(Position{10000, 10000})
 	p := getCursorPos()
-	p.x++ // add space for screenPrint
+	p.x-- // add space for screenPrint
 	fmt.Print("\x1b[u")
 	return p
 }
@@ -270,6 +271,7 @@ func unwrap[T any](v T, err error) T {
 
 func (s *Snake) move() {
 	s.prevDir = s.dir
+	moveCursorPos(s.Head)
 	if s.length > 0 {
 		fmt.Print(snakeBody)
 		s.Tail = append([]Position{s.Head}, s.Tail...)
@@ -280,12 +282,24 @@ func (s *Snake) move() {
 	switch s.dir {
 	case Up:
 		s.Head.x--
+		if s.Head.x <= 0 {
+			s.Head.x = screenSize.x
+		}
 	case Down:
 		s.Head.x++
+		if s.Head.x >= screenSize.x {
+			s.Head.x = 0
+		}
 	case Right:
 		s.Head.y++
+		if s.Head.y >= screenSize.y {
+			s.Head.y = 1
+		}
 	case Left:
 		s.Head.y--
+		if s.Head.y <= 1 {
+			s.Head.y = screenSize.y
+		}
 	}
 
 	moveCursorPos(s.Head)
