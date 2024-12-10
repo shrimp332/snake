@@ -150,56 +150,7 @@ func main() {
 				s.Tail = s.Tail[:len(s.Tail)-1]
 			}
 
-			switch s.dir {
-			case Up:
-				s.prevDir = Up
-				if s.length > 0 {
-					fmt.Print(snakeBody)
-					s.Tail = append([]Position{s.Head}, s.Tail...)
-				} else {
-					fmt.Print(" ")
-				}
-				s.Head.x--
-				moveCursorPos(s.Head)
-				fmt.Print(snakeHead)
-				moveCursorPos(s.Head)
-			case Down:
-				s.prevDir = Down
-				if s.length > 0 {
-					fmt.Print(snakeBody)
-					s.Tail = append([]Position{s.Head}, s.Tail...)
-				} else {
-					fmt.Print(" ")
-				}
-				s.Head.x++
-				moveCursorPos(s.Head)
-				fmt.Print(snakeHead)
-				moveCursorPos(s.Head)
-			case Right:
-				s.prevDir = Right
-				if s.length > 0 {
-					fmt.Print(snakeBody)
-					s.Tail = append([]Position{s.Head}, s.Tail...)
-				} else {
-					fmt.Print(" ")
-				}
-				s.Head.y++
-				moveCursorPos(s.Head)
-				fmt.Print(snakeHead)
-				moveCursorPos(s.Head)
-			case Left:
-				s.prevDir = Left
-				if s.length > 0 {
-					fmt.Print(snakeBody)
-					s.Tail = append([]Position{s.Head}, s.Tail...)
-				} else {
-					fmt.Print(" ")
-				}
-				s.Head.y--
-				moveCursorPos(s.Head)
-				fmt.Print(snakeHead)
-				moveCursorPos(s.Head)
-			}
+      s.move()
 
 			if s.isTail(s.Head) {
 				screenPrintTop("Game Over, Final Score: ", s.length)
@@ -315,4 +266,29 @@ func unwrap[T any](v T, err error) T {
 		panic(err)
 	}
 	return v
+}
+
+func (s *Snake) move() {
+	s.prevDir = s.dir
+	if s.length > 0 {
+		fmt.Print(snakeBody)
+		s.Tail = append([]Position{s.Head}, s.Tail...)
+	} else {
+		fmt.Print(" ")
+	}
+
+	switch s.dir {
+	case Up:
+		s.Head.x--
+	case Down:
+		s.Head.x++
+	case Right:
+		s.Head.y++
+	case Left:
+		s.Head.y--
+	}
+
+	moveCursorPos(s.Head)
+	fmt.Print(snakeHead)
+	moveCursorPos(s.Head)
 }
