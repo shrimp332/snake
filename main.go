@@ -12,6 +12,15 @@ import (
 	"golang.org/x/term"
 )
 
+var debugMode bool
+
+func init() {
+	debug := os.Getenv("S_DEBUG")
+	if debug == "true" || debug == "1" {
+		debugMode = true
+	}
+}
+
 const (
 	asciiDown  = "\x1b[B"
 	asciiUp    = "\x1b[A"
@@ -62,7 +71,13 @@ type food struct {
 	pos []Position
 }
 
-func (f *food) add(p Position, s *Snake) bool {
+func (f *food) add(s *Snake) bool {
+	foodx := rand.Intn(screenSize.x)
+	foody := rand.Intn(screenSize.y)
+	p := Position{
+		x: foodx,
+		y: foody,
+	}
 	if f.isFood(p) || s.Head == p || s.isTail(p) {
 		return false
 	}
@@ -135,14 +150,9 @@ func main() {
 			if len(f.pos) < maxFood && counter%5 == 0 {
 				counter = 0
 				fmt.Print("\x1b[s")
-				foodx := rand.Intn(screenSize.x)
-				foody := rand.Intn(screenSize.y)
-				p := Position{
-					x: foodx,
-					y: foody,
+				for !f.add(&s) {
 				}
-				f.add(p, &s)
-				moveCursorPos(p)
+				moveCursorPos(f.pos[len(f.pos)-1])
 				fmt.Print(foodIcon)
 				fmt.Print("\x1b[u")
 			}
@@ -168,6 +178,9 @@ func main() {
 				s.Tail = append(s.Tail, s.Head)
 				f.remove(s.Head)
 			}
+      if debugMode {
+        screenPrintDebug("Head: ", s.Head, " Food: ", f.pos)
+      }
 			screenPrint("Score: ", s.length)
 			time.Sleep(300 * time.Millisecond)
 		}
@@ -205,6 +218,23 @@ func main() {
 }
 
 func screenPrint(v ...any) {
+	fmt.Print("\x1b[s")
+	defer fmt.Print("\x1b[u")
+	fmt.Print("\x1b[40m")
+	defer fmt.Print("\x1b[49m")
+	if debugMode {
+		moveCursorPos(Position{screenSize.x + 2, 0})
+	} else {
+		moveCursorPos(Position{screenSize.x + 1, 0})
+	}
+	fmt.Print("\x1b[2K")
+	fmt.Print(v...)
+}
+
+func screenPrintDebug(v ...any) {
+	if !debugMode {
+		return
+	}
 	fmt.Print("\x1b[s")
 	defer fmt.Print("\x1b[u")
 	fmt.Print("\x1b[40m")
@@ -261,6 +291,9 @@ func getTSize() Position {
 	moveCursorPos(Position{10000, 10000})
 	p := getCursorPos()
 	p.x-- // add space for screenPrint
+	if debugMode {
+		p.x-- // more space for debug line
+	}
 	fmt.Print("\x1b[u")
 	return p
 }
