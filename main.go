@@ -128,7 +128,7 @@ func main() {
 		dir:     Right,
 		prevDir: Right,
 		length:  0,
-    delay: 500 * time.Millisecond,
+		delay:   500 * time.Millisecond,
 	}
 	s.Head.x = screenSize.x / 2
 	s.Head.y = screenSize.y / 2
@@ -181,12 +181,12 @@ func main() {
 				s.length++
 				s.Tail = append(s.Tail, s.Head)
 				f.remove(s.Head)
-        if s.delay > 100 * time.Millisecond {
-          s.delay -= 25 * time.Millisecond
-        }
+				if s.delay > 100*time.Millisecond {
+					s.delay -= 25 * time.Millisecond
+				}
 			}
 			if debugMode {
-        screenPrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", f.pos)
+				screenPrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", f.pos)
 			}
 			screenPrint("Score: ", s.length)
 			time.Sleep(s.delay)
@@ -220,6 +220,25 @@ func main() {
 					s.dir = Right
 				}
 			}
+		case 'w', 'W':
+			if s.prevDir != Down {
+				s.dir = Up
+			}
+			if s.prevDir != Down {
+				s.dir = Up
+			}
+		case 's', 'S':
+			if s.prevDir != Up {
+				s.dir = Down
+			}
+		case 'a', 'A':
+			if s.prevDir != Right {
+				s.dir = Left
+			}
+		case 'd', 'D':
+			if s.prevDir != Left {
+				s.dir = Right
+			}
 		}
 	}
 }
@@ -229,6 +248,7 @@ func screenPrint(v ...any) {
 	defer fmt.Print("\x1b[u")
 	fmt.Print("\x1b[40m")
 	defer fmt.Print("\x1b[49m")
+
 	if debugMode {
 		moveCursorPos(Position{screenSize.y + 2, 0})
 	} else {
