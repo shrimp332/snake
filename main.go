@@ -72,8 +72,10 @@ type food struct {
 }
 
 func (f *food) add(s *Snake) bool {
-	foodx := rand.Intn(screenSize.x)
-	foody := rand.Intn(screenSize.y)
+	foodx := rand.Intn(screenSize.x - 1)
+	foody := rand.Intn(screenSize.y - 1)
+  foodx++
+  foody++
 	p := Position{
 		x: foodx,
 		y: foody,
@@ -327,7 +329,7 @@ func (s *Snake) move() {
 	case Down:
 		s.Head.x++
 		if s.Head.x > screenSize.x {
-			s.Head.x = 0
+			s.Head.x = 1
 		}
 	case Right:
 		s.Head.y++
