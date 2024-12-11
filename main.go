@@ -46,7 +46,7 @@ const (
 )
 
 type Position struct {
-	x, y int
+	y, x int
 }
 
 type Snake struct {
@@ -60,7 +60,7 @@ type Snake struct {
 
 func (s *Snake) isTail(p Position) bool {
 	for _, v := range s.Tail {
-		if v.x == p.x && v.y == p.y {
+		if v == p {
 			return true
 		}
 	}
@@ -74,8 +74,8 @@ type food struct {
 func (f *food) add(s *Snake) bool {
 	foodx := rand.Intn(screenSize.x - 1)
 	foody := rand.Intn(screenSize.y - 1)
-  foodx++
-  foody++
+	foodx++
+	foody++
 	p := Position{
 		x: foodx,
 		y: foody,
@@ -180,9 +180,9 @@ func main() {
 				s.Tail = append(s.Tail, s.Head)
 				f.remove(s.Head)
 			}
-      if debugMode {
-        screenPrintDebug("Head: ", s.Head, " Food: ", f.pos)
-      }
+			if debugMode {
+				screenPrintDebug("Head: ", s.Head, " Food: ", f.pos)
+			}
 			screenPrint("Score: ", s.length)
 			time.Sleep(300 * time.Millisecond)
 		}
@@ -225,9 +225,9 @@ func screenPrint(v ...any) {
 	fmt.Print("\x1b[40m")
 	defer fmt.Print("\x1b[49m")
 	if debugMode {
-		moveCursorPos(Position{screenSize.x + 2, 0})
+		moveCursorPos(Position{screenSize.y + 2, 0})
 	} else {
-		moveCursorPos(Position{screenSize.x + 1, 0})
+		moveCursorPos(Position{screenSize.y + 1, 0})
 	}
 	fmt.Print("\x1b[2K")
 	fmt.Print(v...)
@@ -241,7 +241,7 @@ func screenPrintDebug(v ...any) {
 	defer fmt.Print("\x1b[u")
 	fmt.Print("\x1b[40m")
 	defer fmt.Print("\x1b[49m")
-	moveCursorPos(Position{screenSize.x + 1, 0})
+	moveCursorPos(Position{screenSize.y + 1, 0})
 	fmt.Print("\x1b[2K")
 	fmt.Print(v...)
 }
@@ -255,7 +255,7 @@ func screenPrintTop(v ...any) {
 }
 
 func moveCursorPos(p Position) {
-	fmt.Printf("\x1b[%d;%dH", p.x, p.y)
+	fmt.Printf("\x1b[%d;%dH", p.y, p.x)
 }
 
 func getCursorPos() Position {
@@ -277,8 +277,8 @@ func getCursorPos() Position {
 	}
 	sPos := strings.Split(string(buf[2:]), ";")
 	pos := Position{
-		x: unwrap(strconv.Atoi(sPos[0])),
-		y: unwrap(strconv.Atoi(sPos[1])),
+		y: unwrap(strconv.Atoi(sPos[0])),
+		x: unwrap(strconv.Atoi(sPos[1])),
 	}
 
 	return pos
@@ -292,9 +292,9 @@ func getTSize() Position {
 	fmt.Print("\x1b[s")
 	moveCursorPos(Position{10000, 10000})
 	p := getCursorPos()
-	p.x-- // add space for screenPrint
+	p.y-- // add space for screenPrint
 	if debugMode {
-		p.x-- // more space for debug line
+		p.y-- // more space for debug line
 	}
 	fmt.Print("\x1b[u")
 	return p
@@ -322,24 +322,24 @@ func (s *Snake) move() {
 
 	switch s.dir {
 	case Up:
-		s.Head.x--
-		if s.Head.x <= 0 {
-			s.Head.x = screenSize.x
+		s.Head.y--
+		if s.Head.y <= 0 {
+			s.Head.y = screenSize.y
 		}
 	case Down:
-		s.Head.x++
-		if s.Head.x > screenSize.x {
-			s.Head.x = 1
-		}
-	case Right:
 		s.Head.y++
 		if s.Head.y > screenSize.y {
 			s.Head.y = 1
 		}
+	case Right:
+		s.Head.x++
+		if s.Head.x > screenSize.x {
+			s.Head.x = 1
+		}
 	case Left:
-		s.Head.y--
-		if s.Head.y <= 0 {
-			s.Head.y = screenSize.y
+		s.Head.x--
+		if s.Head.x <= 0 {
+			s.Head.x = screenSize.x
 		}
 	}
 
