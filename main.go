@@ -289,17 +289,17 @@ func (s *Snake) move() {
 		}
 	case Down:
 		s.Head.x++
-		if s.Head.x >= screenSize.x {
+		if s.Head.x > screenSize.x {
 			s.Head.x = 0
 		}
 	case Right:
 		s.Head.y++
-		if s.Head.y >= screenSize.y {
+		if s.Head.y > screenSize.y {
 			s.Head.y = 1
 		}
 	case Left:
 		s.Head.y--
-		if s.Head.y <= 1 {
+		if s.Head.y <= 0 {
 			s.Head.y = screenSize.y
 		}
 	}
