@@ -56,6 +56,7 @@ type Snake struct {
 	prevDir Direction
 	length  int // score
 	ate     bool
+	delay   time.Duration
 }
 
 func (s *Snake) isTail(p Position) bool {
@@ -127,6 +128,7 @@ func main() {
 		dir:     Right,
 		prevDir: Right,
 		length:  0,
+    delay: 500 * time.Millisecond,
 	}
 	s.Head.x = screenSize.x / 2
 	s.Head.y = screenSize.y / 2
@@ -179,12 +181,15 @@ func main() {
 				s.length++
 				s.Tail = append(s.Tail, s.Head)
 				f.remove(s.Head)
+        if s.delay > 100 * time.Millisecond {
+          s.delay -= 25 * time.Millisecond
+        }
 			}
 			if debugMode {
-				screenPrintDebug("Head: ", s.Head, " Food: ", f.pos)
+        screenPrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", f.pos)
 			}
 			screenPrint("Score: ", s.length)
-			time.Sleep(300 * time.Millisecond)
+			time.Sleep(s.delay)
 		}
 	}()
 
