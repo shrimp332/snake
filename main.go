@@ -62,13 +62,17 @@ type food struct {
 	pos []Position
 }
 
-func (f *food) add(p Position) {
+func (f *food) add(p Position, s *Snake) bool {
+	if f.isFood(p) || s.Head == p || s.isTail(p) {
+		return false
+	}
 	f.pos = append(f.pos, p)
+	return true
 }
 
 func (f *food) isFood(p Position) bool {
 	for _, v := range f.pos {
-		if v.x == p.x && v.y == p.y {
+		if p == v {
 			return true
 		}
 	}
@@ -78,7 +82,7 @@ func (f *food) isFood(p Position) bool {
 func (f *food) remove(p Position) {
 	i := slices.IndexFunc(
 		f.pos,
-		func(pos Position) bool { return pos.x == p.x && pos.y == p.y },
+		func(pos Position) bool { return p == pos },
 	)
 	f.pos[i] = f.pos[len(f.pos)-1]
 	f.pos = f.pos[:len(f.pos)-1]
@@ -129,7 +133,7 @@ func main() {
 		for {
 			counter++
 			if len(f.pos) < maxFood && counter%5 == 0 {
-        counter = 0
+				counter = 0
 				fmt.Print("\x1b[s")
 				foodx := rand.Intn(screenSize.x)
 				foody := rand.Intn(screenSize.y)
@@ -137,7 +141,7 @@ func main() {
 					x: foodx,
 					y: foody,
 				}
-				f.add(p)
+				f.add(p, &s)
 				moveCursorPos(p)
 				fmt.Print(foodIcon)
 				fmt.Print("\x1b[u")
@@ -203,8 +207,8 @@ func main() {
 func screenPrint(v ...any) {
 	fmt.Print("\x1b[s")
 	defer fmt.Print("\x1b[u")
-  fmt.Print("\x1b[40m")
-  defer fmt.Print("\x1b[49m")
+	fmt.Print("\x1b[40m")
+	defer fmt.Print("\x1b[49m")
 	moveCursorPos(Position{screenSize.x + 1, 0})
 	fmt.Print("\x1b[2K")
 	fmt.Print(v...)
