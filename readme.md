@@ -4,7 +4,8 @@ Terminal Snake Game in Go
 ## Building
 ```sh
 git clone https://github.com/shrimp332/snake
-go build -o snake .
+cd snake
+make
 ```
 ## Running
 ```sh
