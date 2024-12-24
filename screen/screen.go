@@ -55,7 +55,8 @@ func (e *Event) Seq() string {
 type Position struct{ X, Y int }
 
 type Screen struct {
-	Size     *Position
+	size     *Position
+	Debug    bool
 	oldState *term.State
 	raw      bool
 	Q        chan *Event
@@ -65,12 +66,42 @@ func (s *Screen) Raw() bool {
 	return s.raw
 }
 
+func (s *Screen) SetSize(p Position) {
+	p.Y-- // Make room for status bar
+	if s.Debug {
+		p.Y--
+	}
+	s.size = &p
+}
+
+func (s *Screen) PrintStatus(v ...any) {
+	fmt.Print("\x1b[40m")
+	defer fmt.Print("\x1b[49m")
+	s.PrintAt(Position{Y: s.size.Y + 1, X: 1}, "\x1b[2K")
+	s.PrintAt(Position{Y: s.size.Y + 1, X: 1}, v...)
+}
+
+func (s *Screen) PrintDebug(v ...any) {
+	if !s.Debug {
+		return
+	}
+	fmt.Print("\x1b[40m")
+	defer fmt.Print("\x1b[49m")
+	s.PrintAt(Position{Y: s.size.Y + 2, X: 1}, "\x1b[2K")
+	s.PrintAt(Position{Y: s.size.Y + 2, X: 1}, v...)
+}
+
+func (s *Screen) Size() *Position {
+	return s.size
+}
+
 func (s *Screen) Start() {
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print("\x1b[?25l") // hide cursor
+	fmt.Print("\x1b[?25l")     // hide cursor
+	fmt.Print("\x1b[H\x1b[2J") // scroll, clear
 	s.raw = true
 	s.oldState = oldState
 	s.Q = make(chan *Event)
@@ -92,6 +123,8 @@ func (s *Screen) readIn() {
 					E: Char,
 					r: &ru,
 				}
+			} else {
+				panic(err)
 			}
 		}
 		s.Q <- e
@@ -127,13 +160,14 @@ func (s *Screen) moveCursor(p Position) {
 }
 
 var mu sync.Mutex
-func (s *Screen) PrintAt(v any, p Position) {
+
+func (s *Screen) PrintAt(p Position, v ...any) {
 	mu.Lock()
 	defer mu.Unlock()
 	fmt.Print("\x1b[s")
 	defer fmt.Print("\x1b[u")
 	s.moveCursor(p)
-	fmt.Print(v)
+	fmt.Print(v...)
 }
 
 func ParseSeq(b []byte) (*Event, error) {
@@ -156,7 +190,7 @@ func ParseSeq(b []byte) (*Event, error) {
 
 	i := slices.IndexFunc(
 		b,
-		func(b byte) bool { return b == byte('R')},
+		func(b byte) bool { return b == byte('R') },
 	)
 
 	if b[i] != 'R' {

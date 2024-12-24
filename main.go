@@ -36,7 +36,9 @@ const (
 )
 
 func main() {
-	scr := screen.Screen{}
+	scr := screen.Screen{
+		Debug: debugMode,
+	}
 	scr.Start()
 	defer scr.Cleanup()
 
@@ -49,10 +51,10 @@ func main() {
 	go eventHandler(&scr, &s)
 	scr.GetSize()
 
-	for scr.Size == nil {
+	for scr.Size() == nil {
 	}
-	s.Head.Y = scr.Size.Y / 2
-	s.Head.X = scr.Size.X / 2
+	s.Head.Y = scr.Size().Y / 2
+	s.Head.X = scr.Size().X / 2
 	f := food{}
 
 	counter := 0
@@ -62,18 +64,17 @@ func main() {
 			counter = 0
 			for !f.add(&s, &scr) {
 			}
-			scr.PrintAt(foodIcon, f.pos[len(f.pos)-1])
+			scr.PrintAt(f.pos[len(f.pos)-1], foodIcon)
 		}
 
 		if s.length > 0 {
-			scr.PrintAt(" ", s.Tail[len(s.Tail)-1])
+			scr.PrintAt(s.Tail[len(s.Tail)-1], " ")
 			s.Tail = s.Tail[:len(s.Tail)-1]
 		}
 
 		s.move(&scr)
 
 		if s.isTail(s.Head) {
-			// screenPrintTop("Game Over, Final Score: ", s.length)
 			scr.Cleanup()
 			os.Exit(0)
 		}
@@ -86,10 +87,11 @@ func main() {
 				s.delay -= 25 * time.Millisecond
 			}
 		}
+
 		if debugMode {
-			// screenPrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", f.pos)
+			scr.PrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", f.pos)
 		}
-		// screenPrint("Score: ", s.length)
+		scr.PrintStatus("Score: ", s.length)
 		time.Sleep(s.delay)
 	}
 }
@@ -99,7 +101,7 @@ func eventHandler(scr *screen.Screen, s *Snake) {
 		e := <-scr.Q
 		switch e.E {
 		case screen.NewSize:
-			scr.Size = e.Pos()
+			scr.SetSize(*e.Pos())
 		case screen.ArrowUp:
 			if s.prevDir != Down {
 				s.dir = Up
@@ -117,9 +119,26 @@ func eventHandler(scr *screen.Screen, s *Snake) {
 				s.dir = Left
 			}
 		case screen.Char:
-			if *e.Rune() == 3 || *e.Rune() == 4 {
+			switch *e.Rune() {
+			case 3, 4:
 				scr.Cleanup()
 				os.Exit(0)
+			case 'w', 'W':
+				if s.prevDir != Down {
+					s.dir = Up
+				}
+			case 's', 'S':
+				if s.prevDir != Up {
+					s.dir = Down
+				}
+			case 'd', 'D':
+				if s.prevDir != Left {
+					s.dir = Right
+				}
+			case 'a', 'A':
+				if s.prevDir != Right {
+					s.dir = Left
+				}
 			}
 		}
 	}
@@ -147,35 +166,35 @@ func (s *Snake) isTail(p screen.Position) bool {
 func (s *Snake) move(scr *screen.Screen) {
 	s.prevDir = s.dir
 	if s.length > 0 {
-		scr.PrintAt(snakeBody, s.Head)
+		scr.PrintAt(s.Head, snakeBody)
 		s.Tail = append([]screen.Position{s.Head}, s.Tail...)
 	} else {
-		scr.PrintAt(" ", s.Head)
+		scr.PrintAt(s.Head, " ")
 	}
 	switch s.dir {
 	case Up:
 		s.Head.Y--
 		if s.Head.Y <= 0 {
-			s.Head.Y = scr.Size.Y
+			s.Head.Y = scr.Size().Y
 		}
 	case Down:
 		s.Head.Y++
-		if s.Head.Y > scr.Size.Y {
+		if s.Head.Y > scr.Size().Y {
 			s.Head.Y = 1
 		}
 	case Right:
 		s.Head.X++
-		if s.Head.X > scr.Size.X {
+		if s.Head.X > scr.Size().X {
 			s.Head.X = 1
 		}
 	case Left:
 		s.Head.X--
 		if s.Head.X <= 0 {
-			s.Head.X = scr.Size.X
+			s.Head.X = scr.Size().X
 		}
 	}
 
-	scr.PrintAt(snakeHead, s.Head)
+	scr.PrintAt(s.Head, snakeHead)
 }
 
 type food struct {
@@ -183,8 +202,8 @@ type food struct {
 }
 
 func (f *food) add(s *Snake, scr *screen.Screen) bool {
-	foodx := rand.Intn(scr.Size.X - 1)
-	foody := rand.Intn(scr.Size.Y - 1)
+	foodx := rand.Intn(scr.Size().X - 1)
+	foody := rand.Intn(scr.Size().Y - 1)
 	foodx++
 	foody++
 	p := screen.Position{

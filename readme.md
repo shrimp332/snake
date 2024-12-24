@@ -9,10 +9,9 @@ make
 ```
 ## Running
 ```sh
-clear; snake 
+# Zoom in with ctrl + to make the map smaller
+./bin/snake 
 ```
-Use clear or the game will just draw itself over the current content  
-also it checks the terminal size at the start of the game, so you can't resize your terminal while playing
 ## Install
 idk why you'd want to, but you can
 ```sh
