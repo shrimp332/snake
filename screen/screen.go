@@ -74,6 +74,10 @@ func (s *Screen) SetSize(p Position) {
 	s.size = &p
 }
 
+func (s *Screen) Size() *Position {
+	return s.size
+}
+
 func (s *Screen) PrintStatus(v ...any) {
 	fmt.Print("\x1b[40m")
 	defer fmt.Print("\x1b[49m")
@@ -91,10 +95,6 @@ func (s *Screen) PrintDebug(v ...any) {
 	s.PrintAt(Position{Y: s.size.Y + 2, X: 1}, v...)
 }
 
-func (s *Screen) Size() *Position {
-	return s.size
-}
-
 func (s *Screen) Start() {
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
@@ -106,6 +106,10 @@ func (s *Screen) Start() {
 	s.oldState = oldState
 	s.Q = make(chan *Event)
 	go s.readIn()
+}
+
+func (s *Screen) Clear() {
+	fmt.Print("\x1b[2J")
 }
 
 func (s *Screen) readIn() {

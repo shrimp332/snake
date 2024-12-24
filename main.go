@@ -47,6 +47,7 @@ func main() {
 		prevDir: Right,
 		length:  0,
 		delay:   500 * time.Millisecond,
+		food:    food{},
 	}
 	go eventHandler(&scr, &s)
 	scr.GetSize()
@@ -55,16 +56,15 @@ func main() {
 	}
 	s.Head.Y = scr.Size().Y / 2
 	s.Head.X = scr.Size().X / 2
-	f := food{}
 
 	counter := 0
 	for {
 		counter++
-		if len(f.pos) < maxFood && counter%5 == 0 {
+		if len(s.food.pos) < maxFood && counter%5 == 0 {
 			counter = 0
-			for !f.add(&s, &scr) {
+			for !s.food.add(&s, &scr) {
 			}
-			scr.PrintAt(f.pos[len(f.pos)-1], foodIcon)
+			scr.PrintAt(s.food.pos[len(s.food.pos)-1], foodIcon)
 		}
 
 		if s.length > 0 {
@@ -79,19 +79,20 @@ func main() {
 			os.Exit(0)
 		}
 
-		if f.isFood(s.Head) {
+		if s.food.isFood(s.Head) {
 			s.length++
 			s.Tail = append(s.Tail, s.Head)
-			f.remove(s.Head)
+			s.food.remove(s.Head)
 			if s.delay > 100*time.Millisecond {
 				s.delay -= 25 * time.Millisecond
 			}
 		}
 
 		if debugMode {
-			scr.PrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", f.pos)
+			scr.PrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", s.food.pos)
 		}
 		scr.PrintStatus("Score: ", s.length)
+		scr.GetSize()
 		time.Sleep(s.delay)
 	}
 }
@@ -101,7 +102,35 @@ func eventHandler(scr *screen.Screen, s *Snake) {
 		e := <-scr.Q
 		switch e.E {
 		case screen.NewSize:
-			scr.SetSize(*e.Pos())
+			if scr.Size() == nil {
+				scr.SetSize(*e.Pos())
+			}
+
+			var difY bool
+			if debugMode {
+				difY = (scr.Size().Y != e.Pos().Y-2)
+			} else {
+				difY = (scr.Size().Y != e.Pos().Y-1)
+			}
+
+			if scr.Size().X != e.Pos().X || difY {
+				scr.SetSize(*e.Pos())
+				scr.Clear()
+				s.prevDir = Down
+				s.dir = Up
+				s.Head.X = scr.Size().X / 2
+				s.Head.Y = scr.Size().Y
+				scr.PrintAt(s.Head, snakeHead)
+				s.food = food{}
+				for i := range s.Tail {
+					s.Tail[i].X = scr.Size().X
+					s.Tail[i].Y = scr.Size().Y + 1
+				}
+				if debugMode {
+					scr.PrintDebug("Head: ", s.Head, " Delay: ", s.delay, " Food: ", s.food.pos)
+				}
+				scr.PrintStatus("Score: ", s.length)
+			}
 		case screen.ArrowUp:
 			if s.prevDir != Down {
 				s.dir = Up
@@ -152,6 +181,7 @@ type Snake struct {
 	length  int // score
 	ate     bool
 	delay   time.Duration
+	food    food
 }
 
 func (s *Snake) isTail(p screen.Position) bool {
