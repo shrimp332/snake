@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/shrimp332/snake/screen"
@@ -49,6 +51,7 @@ func main() {
 		delay:   500 * time.Millisecond,
 		food:    food{},
 	}
+	defer fmt.Println("Game Over! Score: " + strconv.Itoa(s.length))
 	go eventHandler(&scr, &s)
 	scr.GetSize()
 
@@ -151,6 +154,7 @@ func eventHandler(scr *screen.Screen, s *Snake) {
 			switch *e.Rune() {
 			case 3, 4:
 				scr.Cleanup()
+				fmt.Println("Game Over! Score: " + strconv.Itoa(s.length))
 				os.Exit(0)
 			case 'w', 'W':
 				if s.prevDir != Down {

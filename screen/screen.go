@@ -96,12 +96,13 @@ func (s *Screen) PrintDebug(v ...any) {
 }
 
 func (s *Screen) Start() {
+	fmt.Print("\x1b[?1049h") // alternate
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print("\x1b[?25l")     // hide cursor
-	fmt.Print("\x1b[H\x1b[2J") // scroll, clear
+	fmt.Print("\x1b[?25l") // hide cursor
+	s.Clear()
 	s.raw = true
 	s.oldState = oldState
 	s.Q = make(chan *Event)
@@ -109,7 +110,7 @@ func (s *Screen) Start() {
 }
 
 func (s *Screen) Clear() {
-	fmt.Print("\x1b[2J")
+	fmt.Print("\x1b[H\x1b[2J")
 }
 
 func (s *Screen) readIn() {
@@ -144,7 +145,8 @@ func (s *Screen) Cleanup() {
 	}
 	s.raw = false
 	s.oldState = nil
-	fmt.Print("\x1b[?25h") // Reset cursor
+	fmt.Print("\x1b[?25h")   // Reset cursor
+	fmt.Print("\x1b[?1049l") // alternate
 }
 
 // Results in NewSize Event to Screen.Q
